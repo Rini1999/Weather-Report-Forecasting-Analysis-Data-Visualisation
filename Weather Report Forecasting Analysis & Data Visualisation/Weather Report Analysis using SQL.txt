@@ -1,0 +1,75 @@
+**SQl Queries**
+--Query No-1 Give the count of the minimum number of days for the time when temperature reduced.
+with cte as (
+	    select Date,Temperature,
+	    lag(Temperature) over(order by Date) as prev_temp
+	     from Final_df1)
+select count (*) as min_days
+from cte
+where Temperature < prev_temp;
+
+
+--Query No-2 Find the temperature as Cold / hot by using the case and avg of values of the given data set
+with cte as (
+	     select Date,Temperature from Final_df1)
+	      select Date,Temperature,
+        case 
+	when Temperature >=AVG(Temperature) over() then 'Hot'
+		else 'Cold'
+	end as Temp_status
+from cte;
+
+
+--Query No-3 Can you check for all 4 consecutive days when the temperature was below 30 Fahrenheit
+with cte as (
+	     select Date,Temperature,
+	     case when temperature < 30 then 'below'
+	     else 'above'
+	     end as temp,
+	     ROW_NUMBER() over(order by Date) as rn
+	     from Final_df1)
+select cte.Date,cte.Temperature,cte.temp
+from cte
+where temp = 'below'
+	and(select count (*)
+	from cte as inner_cte
+	where inner_cte.rn between cte.rn and cte.rn+3 and inner_cte.temp = 'below') = 4
+	order by cte.Date
+
+
+--Query No-4  Can you find the maximum number of days for which temperature dropped.
+with cte as (
+                   select count(Date) as count_no
+                    from Final_df1
+                    group by Temperature
+                    Having Temperature < avg(Temperature))
+select sum(count_no) as Total_days
+from cte
+
+
+--Query No-5 Can you find the average of average humidity from the dataset  ( NOTE: should contain the following clauses: group by, order by, date )
+
+select Date, avg(AVG_Humidity) from 
+                           (select Date, AVG_Humidity
+                            from Final_df1) a
+group by Date
+order by Date
+
+
+-- Query No-6 Use the GROUP BY clause on the Date column and make a query to fetch details for average windspeed
+select date,AVG_windspeed
+from Final_df1
+group by Date,AVG_windspeed;
+
+--Query No 7 Please add the data in the dataset for 2034 and 2035 as well as forecast predictions for these years 
+
+--Query No 8 If the maximum gust speed increases from 55mph, fetch the details for the next 4 days
+
+
+--Query No-9
+select COUNT(Date) as low_temp_days
+from Final_df1
+where Temperature < 0;
+
+
+--Query No-10   Create another table with a “Foreign key” relation with the existing given data set.
